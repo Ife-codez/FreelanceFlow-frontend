@@ -27,9 +27,9 @@ const Projects = () => {
         <CustomButton label='Add projects' icon={Plus} iconSize={18} />
       </div>
     </div>
-    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-5">
-      <SearchInput placeholder='Search projects...' icon={Search} className="col-span-2 sm:col-span-4" />
-      <Status statuses={["pending", "in-progress", "completed", "on-hold"]} className="col-span-1 sm:col-span-1" />
+    <div className="flex flex-col md:grid md:grid-cols-3 sm:grid-cols-5 gap-2 mb-5">
+      <SearchInput placeholder='Search projects...' icon={Search} className="md:col-span-2 sm:col-span-4" />
+      <Status statuses={["pending", "in-progress", "completed", "on-hold"]} className="md:col-span-1 sm:col-span-1" />
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {projects.map((project) => (

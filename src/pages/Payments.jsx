@@ -39,9 +39,9 @@ const Payments = () => {
         <p className="text-3xl">{paymentSummary.avgSummary}</p>
       </div>
     ))}</div>
-    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-5">
-      <SearchInput placeholder='Search projects...' icon={Search} className="col-span-2 sm:col-span-4" />
-      <Status statuses={["paid", "pending", "overdue"]} className="col-span-1 sm:col-span-1" />
+    <div className="flex flex-col md:grid md:grid-cols-3 sm:grid-cols-5 gap-2 mb-5">
+      <SearchInput placeholder='Search projects...' icon={Search} className="md:col-span-2 sm:col-span-4" />
+      <Status statuses={["paid", "pending", "overdue"]} className="md:col-span-1 sm:col-span-1" />
     </div>
     <div className="bg-white rounded-xl border-[1px] border-gray-200 overflow-x-auto">
       <table className="w-full text-sm text-left min-w-[700px]">

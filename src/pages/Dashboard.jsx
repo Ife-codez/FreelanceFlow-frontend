@@ -3,87 +3,129 @@ import { projects } from "../data/projects";
 import { payments } from "../data/payments";
 import DashboardSummary from "../components/DashboardSummary";
 import { NavLink } from "react-router-dom";
-import { DollarSign, TrendingUp, Clock, FolderKanban } from "lucide-react";
-const Dashboard = () => {
-  const [summaries, useSummaries] = useState([
-    {title: 'Total Income', value: '$34000', description: 'From paid invoices', icon: DollarSign, color: "text-teal-500"},
-    {title: 'Outstanding', value: '$42000', description: 'Pending payments', icon: TrendingUp, color: "text-orange-600"},
-    {title: 'Active Projects', value: '4', description: 'Currently in progress', icon: FolderKanban, color: "text-teal-500"  },
-    {title: 'Overdue', value: '1', description: 'Payments overdue', icon: Clock, color: "text-red-500"},
+import { DollarSign, TrendingUp, Clock, FolderKanban, ArrowRight } from "lucide-react";
 
-  ])
+const Dashboard = () => {
+  const [summaries] = useState([
+    { title: "Total Income", value: "$34,000", description: "From paid invoices", icon: DollarSign, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20" },
+    { title: "Outstanding", value: "$42,000", description: "Pending payments", icon: TrendingUp, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-900/20" },
+    { title: "Active Projects", value: "4", description: "Currently in progress", icon: FolderKanban, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+    { title: "Overdue", value: "1", description: "Payments overdue", icon: Clock, color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" },
+  ]);
+
   const getStatusStyle = (status) => {
     switch (status) {
-      case "In Progress":
-        return "bg-blue-100 text-blue-700";
-      case "Pending":
-        return "bg-yellow-100 text-yellow-700";
-      case "Completed":
-        return "bg-green-100 text-green-700";
-      case "Paid":
-        return "bg-green-100 text-green-700";
-      case "Overdue":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-700";
+      case "In Progress": return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
+      case "Pending":     return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
+      case "Completed":   return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300";
+      case "Paid":        return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300";
+      case "Overdue":     return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+      default:            return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
-  }
-  return ( 
-    <>
-    <div className="flex flex-col gap-2 mb-8">
-      <h1 className="font-semibold text-3xl">Dashboard</h1>
-      <p className="text-gray-600">Welcome back! Here's your business overview.</p>
-    </div>
-    <DashboardSummary summaries={summaries} />
-    <div className="grid lg:grid-cols-2 gap-3 mt-6">
-      <div className="bg-white border-[1px] border-gray-200 py-7 px-5 rounded-xl">
-        <h3 className=" font-semibold mb-5">Recent Projects</h3>
-        <div className="flex flex-col gap-3">
-          {projects.slice(0, 4).map((project) =>(
-            <div key={project.id} className="bg-gray-50 rounded-xl p-4">
-              <div className="flex justify-between mb-2">
-              <p className="font-semibold text-sm sm:text-[15px]">{project.projectTitle}</p>
-              <span className={`px-3 py-1 rounded-full text-[11px] md:text-xs font-semibold ${getStatusStyle( project.status )}`}>
-                {project.status}
-              </span>
-              </div>
-              <span className="text-gray-600 text-sm">{project.clientName}</span>
-            </div>
-          ))}
-        </div>
-        <div className="text-center mt-3">
-        <NavLink to="/projects" className="text-teal-500 hover:underline">
-          View all projects
-        </NavLink>
-        </div>
+  };
+
+  return (
+    <div className="animate-fadeIn">
+
+      {/* Page Header */}
+      <div className="mb-8">
+        <p className="text-xs uppercase tracking-widest text-blue-500 font-semibold mb-1">Overview</p>
+        <h1 className="font-bold text-3xl text-slate-800 dark:text-white tracking-tight">Dashboard</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">Welcome back! Here's your business at a glance.</p>
       </div>
-      <div className="bg-white border-[1px] border-gray-200 py-7 px-5 rounded-xl">
-        <h3 className=" font-semibold mb-5">Recent Payments</h3>
-        <div className="flex flex-col gap-3">
-          {payments.slice(0, 5).map((payment) =>(
-            <div key={payment.invoiceNumber} className="bg-gray-50 rounded-xl p-4">
-              <div className="flex justify-between mb-2">
-                <p className="font-semibold">{payment.invoiceNumber}</p>
-                <p>${payment.amount.toLocaleString()}</p>
-              </div>
-              <div className="flex justify-between mb-2">
-                <p className="text-gray-600 text-sm">{payment.clientName}</p>
-                 <span className={`px-3 py-1 rounded-full text-[11px] md:text-xs font-semibold ${getStatusStyle( payment.status )}`}>
-                {payment.status}
-              </span>
-              </div>
+
+      {/* Summary Cards */}
+      <DashboardSummary summaries={summaries} />
+
+      {/* Recent Sections */}
+      <div className="grid lg:grid-cols-2 gap-5 mt-8">
+
+        {/* Recent Projects */}
+        <div className="bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 rounded-2xl p-6 shadow-card animate-slideUp" style={{ animationDelay: "100ms" }}>
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h3 className="font-bold text-slate-800 dark:text-white text-lg">Recent Projects</h3>
+              <p className="text-slate-400 text-xs mt-0.5">Latest active work</p>
             </div>
-          ))}
+            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+              <FolderKanban size={16} className="text-blue-600" />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {projects.slice(0, 4).map((project, i) => (
+              <div
+                key={project.id}
+                className="group flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-navy-900/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 animate-slideUp"
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm text-slate-700 dark:text-slate-200 truncate">{project.projectTitle}</p>
+                  <p className="text-slate-400 text-xs mt-0.5">{project.clientName}</p>
+                </div>
+                <span className={`ml-3 flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold ${getStatusStyle(project.status)}`}>
+                  {project.status}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <NavLink
+            to="/projects"
+            className="mt-4 flex items-center justify-center gap-1.5 text-blue-600 dark:text-blue-400 text-sm font-medium hover:gap-2.5 transition-all duration-200 group"
+          >
+            View all projects
+            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
+          </NavLink>
         </div>
-        <div className="text-center mt-3">
-        <NavLink to="/payments" className="text-teal-500 hover:underline">
-          View all payments
-        </NavLink>
+
+        {/* Recent Payments */}
+        <div className="bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 rounded-2xl p-6 shadow-card animate-slideUp" style={{ animationDelay: "200ms" }}>
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h3 className="font-bold text-slate-800 dark:text-white text-lg">Recent Payments</h3>
+              <p className="text-slate-400 text-xs mt-0.5">Latest invoice activity</p>
+            </div>
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+              <DollarSign size={16} className="text-emerald-600" />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {payments.slice(0, 5).map((payment, i) => (
+              <div
+                key={payment.invoiceNumber}
+                className="group flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-navy-900/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 animate-slideUp"
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm text-slate-700 dark:text-slate-200">{payment.invoiceNumber}</p>
+                  <p className="text-slate-400 text-xs mt-0.5">{payment.clientName}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-3">
+                  <span className="font-bold text-sm text-slate-700 dark:text-slate-200">
+                    ${payment.amount.toLocaleString()}
+                  </span>
+                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${getStatusStyle(payment.status)}`}>
+                    {payment.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <NavLink
+            to="/payments"
+            className="mt-4 flex items-center justify-center gap-1.5 text-blue-600 dark:text-blue-400 text-sm font-medium hover:gap-2.5 transition-all duration-200 group"
+          >
+            View all payments
+            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
+          </NavLink>
         </div>
+
       </div>
     </div>
-    </>
-   );
-}
- 
+  );
+};
+
 export default Dashboard;
