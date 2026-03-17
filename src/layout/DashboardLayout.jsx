@@ -3,13 +3,19 @@ import { useState } from "react";
 import { Menu, Bell, Search, Sun, Moon } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import { useTheme } from "../context/ThemeContext";
-
+import { Toaster } from "react-hot-toast";
 const DashboardLayout = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
 
   return (
     <div className="flex min-h-screen bg-slate-100 dark:bg-slate-950 transition-colors duration-300">
+      <Toaster position="top-right" toastOptions={{
+        style: {
+          borderRadius: "12px",
+          fontSize: "14px",
+        }
+      }} />
       <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
 
       <div className="flex-1 flex flex-col lg:ml-[260px] min-w-0">
