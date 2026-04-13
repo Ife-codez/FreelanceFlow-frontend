@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
       .finally(() => setLoadingUser(false));
   }, []);
 
-  const login = (userData) => setUser(userData);
+ const login = (userData) => setUser(userData);
  const logout = () => {
   return api.post("/auth/logout").finally(() => setUser(null));
 };

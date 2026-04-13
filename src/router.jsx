@@ -28,7 +28,7 @@ export const router = createBrowserRouter([
         element: <Payments />,
       },
       {
-        path: "client-main",
+        path: "client-main/:id",
         element: <Client />,
       },
     ],

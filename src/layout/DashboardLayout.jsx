@@ -4,10 +4,18 @@ import { Menu, Bell, Search, Sun, Moon } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import { useTheme } from "../context/ThemeContext";
 import { Toaster } from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
 const DashboardLayout = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
-
+  const { user } = useAuth();
+  const getInitials = (name) => {
+  if (!name) return "?";
+  const parts = name.trim().split(" ");
+  return parts.length >= 2
+    ? (parts[0][0] + parts[1][0]).toUpperCase()
+    : parts[0].slice(0, 2).toUpperCase();
+};
   return (
     <div className="flex min-h-screen bg-slate-100 dark:bg-slate-950 transition-colors duration-300">
       <Toaster position="top-right" toastOptions={{
@@ -57,7 +65,7 @@ const DashboardLayout = () => {
 
             {/* Avatar */}
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-sm font-bold shadow shadow-blue-600/20 cursor-pointer">
-              FL
+              {getInitials(user?.name)}
             </div>
           </div>
         </header>
