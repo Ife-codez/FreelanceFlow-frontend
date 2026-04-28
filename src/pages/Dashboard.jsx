@@ -1,27 +1,64 @@
-import { useState } from "react";
-import { projects } from "../data/projects";
-import { payments } from "../data/payments";
+import { useState, useEffect } from "react";
 import DashboardSummary from "../components/DashboardSummary";
 import { NavLink } from "react-router-dom";
-import { DollarSign, TrendingUp, Clock, FolderKanban, ArrowRight } from "lucide-react";
+import { DollarSign, TrendingUp, Clock, FolderKanban, ArrowRight, Loader2 } from "lucide-react";
+import { getProjects } from "../api/projects";
+import { getPayments } from "../api/payments";
 
 const Dashboard = () => {
-  const [summaries] = useState([
-    { title: "Total Income", value: "$34,000", description: "From paid invoices", icon: DollarSign, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20" },
-    { title: "Outstanding", value: "$42,000", description: "Pending payments", icon: TrendingUp, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-900/20" },
-    { title: "Active Projects", value: "4", description: "Currently in progress", icon: FolderKanban, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
-    { title: "Overdue", value: "1", description: "Payments overdue", icon: Clock, color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" },
-  ]);
+  const [projects, setProjects] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [projectsData, paymentsData] = await Promise.all([
+          getProjects(),
+          getPayments(),
+        ]);
+        setProjects(projectsData || []);
+        setPayments(paymentsData || []);
+      } catch (err) {
+        // silently fail — sections will just be empty
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // ── Computed stats ───────────────────────────────────────────────────────────
+  const totalIncome     = payments.filter(p => p.status === "PAID").reduce((sum, p) => sum + (p.amount || 0), 0);
+  const totalOutstanding = payments.filter(p => p.status === "PENDING").reduce((sum, p) => sum + (p.amount || 0), 0);
+  const activeProjects  = projects.filter(p => p.status === "IN_PROGRESS").length;
+  const overduePayments = payments.filter(p => p.status === "OVERDUE").length;
+
+  const summaries = [
+    { title: "Total Income",    value: `$${totalIncome.toLocaleString()}`,     description: "From paid invoices",      icon: DollarSign,  color: "text-blue-600",    bg: "bg-blue-50 dark:bg-blue-900/20" },
+    { title: "Outstanding",     value: `$${totalOutstanding.toLocaleString()}`, description: "Pending payments",        icon: TrendingUp,  color: "text-orange-500",  bg: "bg-orange-50 dark:bg-orange-900/20" },
+    { title: "Active Projects", value: `${activeProjects}`,                    description: "Currently in progress",   icon: FolderKanban,color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+    { title: "Overdue",         value: `${overduePayments}`,                   description: "Payments overdue",        icon: Clock,       color: "text-red-500",     bg: "bg-red-50 dark:bg-red-900/20" },
+  ];
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case "In Progress": return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
-      case "Pending":     return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
-      case "Completed":   return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300";
-      case "Paid":        return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300";
-      case "Overdue":     return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+      case "IN_PROGRESS": return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
+      case "PENDING":     return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
+      case "COMPLETED":   return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300";
+      case "PAID":        return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300";
+      case "OVERDUE":     return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+      case "ON_HOLD":     return "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400";
       default:            return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
+  };
+
+  const formatStatus = (status) => {
+    const map = {
+      IN_PROGRESS: "In Progress", PENDING: "Pending", COMPLETED: "Completed",
+      ON_HOLD: "On Hold", PAID: "Paid", OVERDUE: "Overdue",
+    };
+    return map[status] ?? status;
   };
 
   return (
@@ -52,23 +89,33 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            {projects.slice(0, 4).map((project, i) => (
-              <div
-                key={project.id}
-                className="group flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-navy-900/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 animate-slideUp"
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm text-slate-700 dark:text-slate-200 truncate">{project.projectTitle}</p>
-                  <p className="text-slate-400 text-xs mt-0.5">{project.clientName}</p>
+          {loading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 size={20} className="animate-spin text-blue-500" />
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="flex items-center justify-center py-10">
+              <p className="text-slate-400 text-sm">No projects yet</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {projects.slice(0, 4).map((project, i) => (
+                <div
+                  key={project.id}
+                  className="group flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-navy-900/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 animate-slideUp"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-slate-700 dark:text-slate-200 truncate">{project.projectTitle}</p>
+                    <p className="text-slate-400 text-xs mt-0.5">{project.client?.clientName}</p>
+                  </div>
+                  <span className={`ml-3 flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold ${getStatusStyle(project.status)}`}>
+                    {formatStatus(project.status)}
+                  </span>
                 </div>
-                <span className={`ml-3 flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold ${getStatusStyle(project.status)}`}>
-                  {project.status}
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           <NavLink
             to="/projects"
@@ -91,28 +138,38 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            {payments.slice(0, 5).map((payment, i) => (
-              <div
-                key={payment.invoiceNumber}
-                className="group flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-navy-900/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 animate-slideUp"
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm text-slate-700 dark:text-slate-200">{payment.invoiceNumber}</p>
-                  <p className="text-slate-400 text-xs mt-0.5">{payment.clientName}</p>
+          {loading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 size={20} className="animate-spin text-blue-500" />
+            </div>
+          ) : payments.length === 0 ? (
+            <div className="flex items-center justify-center py-10">
+              <p className="text-slate-400 text-sm">No payments yet</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {payments.slice(0, 5).map((payment, i) => (
+                <div
+                  key={payment.id}
+                  className="group flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-navy-900/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 animate-slideUp"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-slate-700 dark:text-slate-200">{payment.invoiceNumber}</p>
+                    <p className="text-slate-400 text-xs mt-0.5">{payment.project?.projectTitle}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-3">
+                    <span className="font-bold text-sm text-slate-700 dark:text-slate-200">
+                      ${payment.amount?.toLocaleString()}
+                    </span>
+                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${getStatusStyle(payment.status)}`}>
+                      {formatStatus(payment.status)}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-3">
-                  <span className="font-bold text-sm text-slate-700 dark:text-slate-200">
-                    ${payment.amount.toLocaleString()}
-                  </span>
-                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${getStatusStyle(payment.status)}`}>
-                    {payment.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           <NavLink
             to="/payments"

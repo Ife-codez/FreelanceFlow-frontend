@@ -4,7 +4,7 @@ import CustomButton from "../components/CustomButton";
 import { Plus, Search, Calendar, DollarSign, X, Loader2, AlertCircle } from "lucide-react";
 import SearchInput from "../components/SearchInput";
 import Status from "../components/Status";
-import { getProjects, createProject } from "../api/projects";
+import { getProjects, createProject, updateProject, deleteProject } from "../api/projects";
 import { getClients } from "../api/clients";
 import toast from "react-hot-toast";
 
@@ -72,7 +72,7 @@ const AddProjectModal = ({ onClose, onSuccess }) => {
         {/* Top accent bar */}
         <div className="h-[3px] w-full bg-gradient-to-r from-blue-600 via-blue-400 to-transparent" />
 
-        <div className="p-8">
+        <div className="p-8 max-h-[85vh] overflow-y-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -89,7 +89,6 @@ const AddProjectModal = ({ onClose, onSuccess }) => {
 
           {/* Form */}
           <div className="flex flex-col gap-4">
-            {/* Project Title */}
             <div className="flex flex-col gap-1.5">
               <label className={labelClass}>Project Title</label>
               <input
@@ -101,7 +100,6 @@ const AddProjectModal = ({ onClose, onSuccess }) => {
               />
             </div>
 
-            {/* Client */}
             <div className="flex flex-col gap-1.5">
               <label className={labelClass}>Client</label>
               <select name="clientId" value={form.clientId} onChange={handleChange} className={inputClass}>
@@ -114,7 +112,6 @@ const AddProjectModal = ({ onClose, onSuccess }) => {
               </select>
             </div>
 
-            {/* Description */}
             <div className="flex flex-col gap-1.5">
               <label className={labelClass}>Description</label>
               <textarea
@@ -127,7 +124,6 @@ const AddProjectModal = ({ onClose, onSuccess }) => {
               />
             </div>
 
-            {/* Budget & Start Date */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <label className={labelClass}>Budget</label>
@@ -152,7 +148,6 @@ const AddProjectModal = ({ onClose, onSuccess }) => {
               </div>
             </div>
 
-            {/* Status */}
             <div className="flex flex-col gap-1.5">
               <label className={labelClass}>Status</label>
               <select name="status" value={form.status} onChange={handleChange} className={inputClass}>
@@ -178,12 +173,174 @@ const AddProjectModal = ({ onClose, onSuccess }) => {
   );
 };
 
+// ── Edit Project Modal ─────────────────────────────────────────────────────────
+const EditProjectModal = ({ project, onClose, onUpdated, onDeleted }) => {
+  const [form, setForm] = useState({
+    projectTitle: project.projectTitle || "",
+    description: project.description || "",
+    budget: project.budget || "",
+    startDate: project.startDate ? project.startDate.slice(0, 10) : "",
+    status: project.status || "PENDING",
+    clientId: project.clientId || "",
+  });
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    getClients()
+      .then(setClients)
+      .catch(() => toast.error("Failed to load clients"));
+  }, []);
+
+  const handleChange = (e) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleUpdate = async () => {
+    if (!form.projectTitle || !form.budget || !form.startDate || !form.clientId) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    setLoading(true);
+    try {
+      const updated = await updateProject(project.id, {
+        projectTitle: form.projectTitle,
+        description: form.description,
+        budget: Number(form.budget),
+        startDate: form.startDate,
+        status: form.status,
+        clientId: form.clientId,
+      });
+      toast.success("Project updated successfully!");
+      onUpdated(updated);
+      onClose();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to update project");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this project?")) return;
+    setDeleting(true);
+    try {
+      await deleteProject(project.id);
+      toast.success("Project deleted");
+      onDeleted(project.id);
+      onClose();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to delete project");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const inputClass =
+    "w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition";
+
+  const labelClass =
+    "text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide";
+
+  return createPortal(
+    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-slideUp">
+        <div className="h-[3px] w-full bg-gradient-to-r from-blue-600 via-blue-400 to-transparent" />
+
+        <div className="p-8 max-h-[85vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Edit Project</h2>
+              <p className="text-slate-400 text-sm mt-0.5">Update the project details below</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className={labelClass}>Project Title</label>
+              <input name="projectTitle" value={form.projectTitle} onChange={handleChange} placeholder="e.g. Brand Identity Redesign" className={inputClass} />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className={labelClass}>Client</label>
+              <select name="clientId" value={form.clientId} onChange={handleChange} className={inputClass}>
+                <option value="">Select a client...</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>{c.clientName} — {c.companyName}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className={labelClass}>Description</label>
+              <textarea name="description" value={form.description} onChange={handleChange} placeholder="Brief overview of the project scope..." rows={3} className={`${inputClass} resize-none`} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className={labelClass}>Budget</label>
+                <input name="budget" value={form.budget} onChange={handleChange} placeholder="e.g. 5000" type="number" className={inputClass} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className={labelClass}>Start Date</label>
+                <input type="date" name="startDate" value={form.startDate} onChange={handleChange} className={inputClass} />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className={labelClass}>Status</label>
+              <select name="status" value={form.status} onChange={handleChange} className={inputClass}>
+                <option value="PENDING">Pending</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="ON_HOLD">On Hold</option>
+              </select>
+            </div>
+
+            {/* Save button */}
+            <button
+              onClick={handleUpdate}
+              disabled={loading}
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-sm shadow-sm shadow-blue-600/20 transition-all duration-200 mt-1"
+            >
+              {loading ? "Saving..." : "Save Changes"}
+            </button>
+
+            {/* Divider */}
+            <div className="h-px bg-slate-100 dark:bg-slate-800" />
+
+            {/* Delete button */}
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="w-full py-2.5 bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed text-red-500 font-semibold rounded-xl text-sm border border-red-200 dark:border-red-800/50 transition-all duration-200"
+            >
+              {deleting ? "Deleting..." : "Delete Project"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
 // ── Projects Page ──────────────────────────────────────────────────────────────
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -204,6 +361,14 @@ const Projects = () => {
 
   const handleProjectAdded = (newProject) => {
     setProjects((prev) => [newProject, ...prev]);
+  };
+
+  const handleProjectUpdated = (updated) => {
+    setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  };
+
+  const handleProjectDeleted = (id) => {
+    setProjects((prev) => prev.filter((p) => p.id !== id));
   };
 
   const getStatusStyle = (status) => {
@@ -228,11 +393,19 @@ const Projects = () => {
 
   return (
     <div className="animate-fadeIn">
-      {/* Modal */}
+      {/* Modals */}
       {showModal && (
         <AddProjectModal
           onClose={() => setShowModal(false)}
           onSuccess={handleProjectAdded}
+        />
+      )}
+      {selectedProject && (
+        <EditProjectModal
+          project={selectedProject}
+          onClose={() => setSelectedProject(null)}
+          onUpdated={handleProjectUpdated}
+          onDeleted={handleProjectDeleted}
         />
       )}
 
@@ -309,7 +482,8 @@ const Projects = () => {
           {projects.map((project, i) => (
             <div
               key={project.id}
-              className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 hover:shadow-lg hover:shadow-slate-200/60 dark:hover:shadow-none hover:-translate-y-0.5 transition-all duration-200 animate-slideUp"
+              onClick={() => setSelectedProject(project)}
+              className="cursor-pointer bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 hover:shadow-lg hover:shadow-slate-200/60 dark:hover:shadow-none hover:-translate-y-0.5 transition-all duration-200 animate-slideUp"
               style={{ animationDelay: `${i * 50}ms` }}
             >
               {/* Header */}
