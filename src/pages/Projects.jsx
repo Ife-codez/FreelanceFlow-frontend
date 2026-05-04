@@ -47,7 +47,7 @@ const AddProjectModal = ({ onClose, onSuccess }) => {
         clientId: form.clientId,
       });
       toast.success("Project created successfully!");
-      onSuccess(newProject);
+      onSuccess();
       onClose();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to create project");
@@ -213,7 +213,7 @@ const EditProjectModal = ({ project, onClose, onUpdated, onDeleted }) => {
         clientId: form.clientId,
       });
       toast.success("Project updated successfully!");
-      onUpdated(updated);
+      onUpdated();
       onClose();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to update project");
@@ -359,13 +359,13 @@ const Projects = () => {
     fetchProjects();
   }, []);
 
-  const handleProjectAdded = (newProject) => {
-    setProjects((prev) => [newProject, ...prev]);
-  };
+  const handleProjectAdded = () => {
+  fetchProjects();
+};
 
-  const handleProjectUpdated = (updated) => {
-    setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-  };
+  const handleProjectUpdated = () => {
+  fetchProjects();
+};
 
   const handleProjectDeleted = (id) => {
     setProjects((prev) => prev.filter((p) => p.id !== id));

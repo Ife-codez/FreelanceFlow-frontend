@@ -17,7 +17,7 @@ export const createProject = async (projectData) => {
 
 export const updateProject = async (id, projectData) => {
   const response = await api.put(`/projects/${id}`, projectData);
-  return response.data.data.project;
+  return response.data.project;
 };
 
 export const deleteProject = async (id) => {

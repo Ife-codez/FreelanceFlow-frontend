@@ -4,14 +4,20 @@ import { NavLink } from "react-router-dom";
 import { DollarSign, TrendingUp, Clock, FolderKanban, ArrowRight, Loader2 } from "lucide-react";
 import { getProjects } from "../api/projects";
 import { getPayments } from "../api/payments";
-
+import { useAuth } from "../context/AuthContext";
 const Dashboard = () => {
+  const { user } = useAuth();
   const [projects, setProjects] = useState([]);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     const fetchData = async () => {
+      setLoading(true);
       try {
         const [projectsData, paymentsData] = await Promise.all([
           getProjects(),
@@ -26,7 +32,7 @@ const Dashboard = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [user]);
 
   // ── Computed stats ───────────────────────────────────────────────────────────
   const totalIncome     = payments.filter(p => p.status === "PAID").reduce((sum, p) => sum + (p.amount || 0), 0);

@@ -17,7 +17,7 @@ export const createClient = async (clientData) => {
 
 export const updateClient = async (id, clientData) => {
   const response = await api.put(`/clients/${id}`, clientData);
-  return response.data.data.client;
+  return response.data.client;
 };
 
 export const deleteClient = async (id) => {

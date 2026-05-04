@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { loginUser, signupUser } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
-
+import getErrorMessage from "../utils/getErrorMessage";
 const AuthModal = ({ onClose }) => {
   const { login } = useAuth();
   const [mode, setMode] = useState("login");
@@ -29,7 +29,8 @@ const AuthModal = ({ onClose }) => {
       login(user);
       onClose();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Something went wrong");
+      console.log(err)
+      toast.error(getErrorMessage(err, "Failed to access account"));
     } finally {
       setLoading(false);
     }
@@ -88,7 +89,7 @@ const AuthModal = ({ onClose }) => {
                   className="w-full px-4 py-2.5 pr-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {showPassword ? <Eye size={15} /> : <EyeOff size={15} />}
                 </button>
               </div>
             </div>
